@@ -4,6 +4,7 @@ pipeline {
         stage('Descargar Código') {
             steps {
                 echo 'Clonando el repositorio...'
+                // He puesto tu repositorio real según tus logs
                 git branch: 'desarrollo', url: 'https://github.com/choovidev/proyecto-devsecops.git'
             }
         }
@@ -16,17 +17,15 @@ pipeline {
         stage('Análisis de Seguridad (Trivy)') {
             steps {
                 echo 'Buscando vulnerabilidades CRÍTICAS...'
-                // Ejecutamos Trivy. Si falla, el pipeline se corta aquí.
-                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL mi-app-segura:latest'
+                // Cambio clave: Añadimos :0.49.1 para que Docker encuentre la imagen siempre
+                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.49.1 image --exit-code 1 --severity CRITICAL mi-app-segura:latest'
             }
         }
         stage('Despliegue en Producción (CD)') {
             steps {
                 echo '¡Imagen limpia! Desplegando en el servidor...'
-                // Detenemos el contenedor viejo si existe (el || true evita que falle la primera vez)
                 sh 'docker stop app-produccion || true'
                 sh 'docker rm app-produccion || true'
-                // Arrancamos el nuevo
                 sh 'docker run -d --name app-produccion mi-app-segura:latest'
             }
         }
